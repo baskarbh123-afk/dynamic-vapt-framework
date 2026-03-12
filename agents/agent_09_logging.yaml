@@ -1,0 +1,53 @@
+# ============================================================================
+# Agent 09 — Security Logging & Monitoring Failures (A09:2021)
+# ============================================================================
+agent:
+  id: "agent-09-logging"
+  name: "Logging & Monitoring Agent"
+  owasp_category: "A09:2021 — Security Logging and Monitoring Failures"
+  priority: "low"
+  description: >
+    Assesses the application's security logging and monitoring capabilities.
+    Checks whether security-relevant events are properly logged, whether logs
+    can be injected or tampered, and whether monitoring would detect attack
+    patterns observed during the engagement.
+
+cwe_coverage:
+  - id: "CWE-117"
+    name: "Improper Output Neutralization for Logs"
+    test: "Inject log-breaking characters in inputs, check log integrity"
+  - id: "CWE-223"
+    name: "Omission of Security-relevant Information"
+    test: "Verify login failures, access denials, and errors are logged"
+  - id: "CWE-532"
+    name: "Insertion of Sensitive Information into Log File"
+    test: "Check if passwords, tokens, or PII appear in accessible logs"
+  - id: "CWE-778"
+    name: "Insufficient Logging"
+    test: "Verify coverage of security events in audit log"
+
+modules:
+  - path: "phases/04-post-exploitation/DATA_ACCESS_ASSESSMENT.md"
+    priority: 1
+    description: "Assess logging of exploitation activities"
+
+requires:
+  - "Phase 03 (Exploitation) completed"
+  - "Access to application logs (if provided by client)"
+
+execution_order:
+  - step: 1
+    action: "Test log injection via user-controlled input fields"
+  - step: 2
+    action: "Verify failed login attempts are logged"
+  - step: 3
+    action: "Verify authorization failures are logged"
+  - step: 4
+    action: "Check if exploitation activities triggered alerts"
+  - step: 5
+    action: "Check for sensitive data in accessible log endpoints"
+  - step: 6
+    action: "Log all findings to logs/engagement.log"
+
+findings_prefix: "F-A09"
+report_tags: ["logging", "monitoring", "audit", "detection"]

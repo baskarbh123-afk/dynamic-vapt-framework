@@ -1,0 +1,67 @@
+# ============================================================================
+# Agent 08 — Software & Data Integrity Failures (A08:2021)
+# ============================================================================
+agent:
+  id: "agent-08-data-integrity"
+  name: "Data Integrity Agent"
+  owasp_category: "A08:2021 — Software and Data Integrity Failures"
+  priority: "high"
+  description: >
+    Tests for data integrity failures including mass assignment, unsafe
+    deserialization, file upload manipulation, and untrusted data acceptance
+    without integrity verification.
+
+cwe_coverage:
+  - id: "CWE-345"
+    name: "Insufficient Verification of Data Authenticity"
+    test: "Check if API accepts unsigned/unverified data"
+  - id: "CWE-353"
+    name: "Missing Support for Integrity Check"
+    test: "File upload without content validation"
+  - id: "CWE-426"
+    name: "Untrusted Search Path"
+    test: "Path manipulation in file operations"
+  - id: "CWE-494"
+    name: "Download of Code Without Integrity Check"
+    test: "CDN/external resource integrity (SRI)"
+  - id: "CWE-502"
+    name: "Deserialization of Untrusted Data"
+    test: "Test for unsafe deserialization in API inputs"
+  - id: "CWE-565"
+    name: "Reliance on Cookies without Validation/Integrity Checking"
+    test: "Cookie tampering without server validation"
+  - id: "CWE-829"
+    name: "Inclusion of Functionality from Untrusted Control Sphere"
+    test: "Uploaded file execution, external resource loading"
+
+modules:
+  - path: "phases/03-exploitation/api/MASS_ASSIGNMENT.md"
+    priority: 1
+    description: "Parameter pollution, object over-binding"
+  - path: "phases/03-exploitation/web/FILE_UPLOAD.md"
+    priority: 1
+    description: "Extension bypass, content-type manipulation"
+  - path: "phases/03-exploitation/api/REST_API.md"
+    priority: 2
+    description: "Deserialization and API data integrity"
+
+requires:
+  - "Phase 02 (Enumeration) completed"
+  - "targets/endpoints.md — API endpoints with accepted parameters documented"
+
+execution_order:
+  - step: 1
+    action: "Read targets/endpoints.md for API endpoints with writable parameters"
+  - step: 2
+    action: "Execute MASS_ASSIGNMENT.md — add role/privilege fields to requests"
+  - step: 3
+    action: "Execute FILE_UPLOAD.md — extension bypass, malicious content"
+  - step: 4
+    action: "Execute REST_API.md — deserialization, data integrity checks"
+  - step: 5
+    action: "Check SRI tags on external script/CSS includes"
+  - step: 6
+    action: "Log all findings to logs/engagement.log"
+
+findings_prefix: "F-A08"
+report_tags: ["mass-assignment", "file-upload", "deserialization", "integrity"]

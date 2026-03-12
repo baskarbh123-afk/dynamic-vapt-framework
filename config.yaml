@@ -1,0 +1,317 @@
+# ============================================================================
+# PENETRATION TESTING FRAMEWORK — CENTRALIZED CONFIGURATION
+# ============================================================================
+# Engagement: Cloudonix Bug Bounty / Vulnerability Disclosure
+# Policy Reference: Cloudonix Vulnerability Disclosure Policy
+# Report to: security@cloudonix.io
+# ============================================================================
+
+# --- Engagement Metadata ---
+engagement:
+  name: "Cloudonix Staging Platform Penetration Test"
+  id: "PT-2026-CLOUDONIX-001"
+  client: "Cloudonix"
+  application: "Cloudonix Platform (API, SIP, Cockpit)"
+  version: ""                           # To be determined during recon
+  environment: "staging"                # IMPORTANT: Only staging resources are authorized
+  type: "bug-bounty"                    # Cloudonix Vulnerability Disclosure Program
+  start_date: "2026-03-03"
+  end_date: ""
+  report_date: ""
+  lead_tester: "Baskar"
+  team: []
+
+# --- Authorization ---
+authorization:
+  roe_signed: true                      # Authorized via Cloudonix Vulnerability Disclosure Policy
+  roe_date: "2026-03-03"
+  roe_reference: "Cloudonix Vulnerability Disclosure Policy — Public Bug Bounty Program"
+  emergency_contact:
+    name: "Cloudonix Security Team"
+    phone: ""
+    email: "security@cloudonix.io"
+  tester_ips: []                        # No IP whitelisting required for staging
+  testing_window:
+    timezone: "UTC"
+    start_time: "00:00"
+    end_time: "23:59"
+    days: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+# --- Scope Definition ---
+scope:
+  in_scope:
+    domains:
+      - domain: "api.staging.cloudonix.io"
+        ip: ""
+        notes: "Cloudonix API services (staging)"
+      - domain: "api.cloudonix.io"
+        ip: ""
+        notes: "Cloudonix API services (production — test with caution, staging preferred)"
+      - domain: "sip.staging.cloudonix.io"
+        ip: ""
+        notes: "Cloudonix SIP services (staging)"
+      - domain: "wss.staging.cloudonix.io"
+        ip: ""
+        notes: "Cloudonix WebSocket SIP services (staging)"
+      - domain: "*.sip.staging.cloudonix.io"
+        ip: ""
+        notes: "Cloudonix SIP wildcard subdomains (staging)"
+      - domain: "*.staging.cloudonix.net"
+        ip: ""
+        notes: "Cloudonix staging net wildcard subdomains"
+      - domain: "cockpit.staging.cloudonix.io"
+        ip: ""
+        notes: "Cloudonix Cockpit — primary testing endpoint"
+    features:
+      - "Cloudonix Cockpit web application"
+      - "API authentication and authorization"
+      - "Customer data access controls"
+      - "SIP call creation and management"
+      - "SIP session information disclosure"
+      - "Cross-customer data isolation"
+      - "Public vs non-public data access"
+      - "Anonymous vs authenticated access controls"
+    api_endpoints:
+      - method: "GET"
+        path: "/api/*"
+        auth: "bearer"
+        description: "Cloudonix REST API — staging"
+      - method: "POST"
+        path: "/api/*"
+        auth: "bearer"
+        description: "Cloudonix REST API — staging"
+  out_of_scope:
+    domains:
+      - domain: "cloudonix.com"
+        reason: "Commercial web property — no bounty awarded, non-mission-critical"
+      - domain: "*.cloudonix.com (non-staging)"
+        reason: "Production resources without staging designator are out of scope"
+      - domain: "*.cloudonix.io (non-staging)"
+        reason: "Production resources without staging designator are out of scope"
+      - domain: "*.cloudonix.net (non-staging)"
+        reason: "Production resources without staging designator are out of scope"
+    actions:
+      - "Distributed Denial of Service (DDoS) or volumetric attacks — never eligible"
+      - "Social engineering without a fixable technical limitation"
+      - "Automated scanner-only results without real exploit demonstration"
+      - "AI-generated vulnerability reports without manual verification"
+      - "Brute-forcing customer-controlled credentials"
+      - "Circumventing third-party services (deemed lawful access by Cloudonix)"
+      - "Testing on production/non-staging resources"
+      - "Privacy violations, destruction of data, service degradation"
+      - "Interacting with accounts not owned by the tester"
+  constraints:
+    production_data_access: false       # Only interact with your own staging accounts
+    destructive_testing: false
+    rate_limit_exception: false
+    max_requests_per_second: 10
+
+# --- Target Information ---
+target:
+  primary_domain: "https://cockpit.staging.cloudonix.io"
+  base_url: "https://cockpit.staging.cloudonix.io"
+  subdomains:
+    - subdomain: "api.staging.cloudonix.io"
+      purpose: "Cloudonix API services"
+      in_scope: true
+    - subdomain: "sip.staging.cloudonix.io"
+      purpose: "Cloudonix SIP services"
+      in_scope: true
+    - subdomain: "wss.staging.cloudonix.io"
+      purpose: "Cloudonix WebSocket SIP services"
+      in_scope: true
+    - subdomain: "cockpit.staging.cloudonix.io"
+      purpose: "Cloudonix Cockpit web application"
+      in_scope: true
+    - subdomain: "api.cloudonix.io"
+      purpose: "Cloudonix API services (production)"
+      in_scope: true
+  third_party_integrations: []
+  network:
+    waf_detected: false                 # To be determined during recon
+    waf_product: ""
+    load_balancer: false
+    cdn: false
+    cdn_provider: ""
+    reverse_proxy: false
+
+# --- Technology Stack ---
+# To be populated during Phase 1 (Reconnaissance) and Phase 2 (Enumeration)
+tech_stack:
+  backend:
+    language: ""
+    framework: ""
+    web_server: ""
+    version: ""
+  frontend:
+    framework: ""
+    template_engine: ""
+    css_framework: ""
+    build_tool: ""
+  database:
+    type: ""
+    orm: ""
+    version: ""
+  authentication:
+    session_type: ""                    # To be determined — likely JWT or cookie
+    token_algorithm: ""
+    mfa_present: false
+    oauth_provider: ""
+    sso_type: ""
+  infrastructure:
+    cloud_provider: ""
+    container_platform: ""
+    cdn: ""
+    waf: ""
+  file_upload:
+    allowed: false
+    storage_type: ""
+    cdn_served: false
+    direct_execution: false
+    mime_validation: ""
+  api:
+    style: "REST"                       # Cloudonix API is REST-based
+    version: ""
+    documentation: ""
+    auth_method: "bearer"
+
+# --- Credentials ---
+# Create your own test accounts on the staging platform
+credentials:
+  test_accounts:
+    - role: "anonymous"
+      username: ""
+      password: ""
+      notes: "Unauthenticated testing — anonymous public access"
+    - role: "customer_a"
+      username: ""
+      password: ""
+      notes: "Primary test customer account (self-registered on staging)"
+    - role: "customer_b"
+      username: ""
+      password: ""
+      notes: "Secondary test customer (for cross-customer isolation testing)"
+  api_keys:
+    - purpose: "Customer A API key"
+      key: ""
+      scope: ""
+      expiry: ""
+    - purpose: "Customer B API key"
+      key: ""
+      scope: ""
+      expiry: ""
+  oauth:
+    client_id: ""
+    client_secret: ""
+    redirect_uri: ""
+    provider_accounts: []
+
+# --- Testing Preferences ---
+preferences:
+  phases_to_run:
+    recon: true
+    enumeration: true
+    exploitation: true
+    post_exploitation: true
+    reporting: true
+  exploitation_modules:
+    # Auth modules — HIGH PRIORITY (core bounty targets)
+    authentication: true
+    authorization: true                 # Cross-customer data isolation
+    jwt_security: true
+    oauth: true
+    # Web modules
+    xss: true
+    sql_injection: true
+    command_injection: true
+    ssrf: true
+    csrf: true
+    file_upload: true
+    path_traversal: true
+    xxe: true
+    ssti: true
+    open_redirect: true
+    html_injection: false               # Cloudonix: HTML injections = $0 payout
+    # API modules — HIGH PRIORITY (API is core service)
+    rest_api: true
+    graphql: false                      # Enable if GraphQL discovered
+    websocket: true                     # WSS SIP services are in scope
+    mass_assignment: true
+    # Infrastructure modules
+    security_misconfig: true
+    cors: true
+    clickjacking: false                 # Cloudonix: clickjacking = $0 payout
+    http_smuggling: true
+    cache_poisoning: true
+    subdomain_takeover: true
+    sensitive_data_exposure: true       # Cross-customer data exposure
+    # Business logic modules
+    business_logic: true
+    rate_limiting: true
+    idor: true                          # Cross-customer IDOR = High/Critical
+    privilege_escalation: true
+  tool_settings:
+    dirsearch_threads: 5
+    dirsearch_delay: 0.5
+    ffuf_rate: 10
+    nuclei_rate_limit: 5
+    sqlmap_level: 2
+    sqlmap_risk: 1
+    sqlmap_technique: "BT"
+    max_request_rate: 10
+  reporting:
+    format: "markdown"
+    include_executive_summary: true
+    include_technical_report: true
+    include_poc: true
+    classification: "CONFIDENTIAL"
+  agents:
+    enabled: true                       # Enable multi-agent execution
+    run_order: "priority"               # priority | sequential | parallel
+    agents_to_run:                      # Which agents to enable (by number)
+      agent_01_access_control: true     # A01 — Broken Access Control (CRITICAL)
+      agent_02_cryptographic: true      # A02 — Cryptographic Failures (HIGH)
+      agent_03_injection: true          # A03 — Injection (CRITICAL)
+      agent_04_insecure_design: true    # A04 — Insecure Design (MEDIUM)
+      agent_05_misconfiguration: true   # A05 — Security Misconfiguration (HIGH)
+      agent_06_vulnerable_components: true  # A06 — Vulnerable Components (MEDIUM)
+      agent_07_auth_failures: true      # A07 — Auth Failures (CRITICAL)
+      agent_08_data_integrity: true     # A08 — Data Integrity Failures (HIGH)
+      agent_09_logging: true            # A09 — Logging Failures (LOW)
+      agent_10_ssrf: true               # A10 — SSRF (HIGH)
+  logging:
+    level: "INFO"
+    log_http_requests: true
+    log_http_responses: true
+    log_file: "logs/engagement.log"
+    agent_log_file: "logs/agent_execution.log"
+    evidence_dir: "evidence/"
+
+# ============================================================================
+# CLOUDONIX BOUNTY REFERENCE
+# ============================================================================
+# Severity    | CVSS Range  | Payout
+# ------------|-------------|--------
+# No Impact   | —           | $0      (scanner results, clickjacking, HTML injection)
+# Low         | 0.1 – 3.9   | $5-25   (circumvention w/o access gain)
+# Medium      | 4.0 – 6.9   | $25-50  (SIP anonymous call, storage name conflict)
+# High        | 7.0 – 8.9   | $50-100 (cross-customer data disclosure/modification)
+# Critical    | 9.0 – 10    | $100-500 (anonymous access to non-public data, DoS)
+#
+# Key bounty-eligible targets:
+#   - Anonymous access to non-public customer data/metadata (Critical)
+#   - Cross-customer data disclosure or modification (High)
+#   - Anonymous modification of public customer data (High)
+#   - Non-trivial DoS affecting other customers (Critical)
+#   - SIP: anonymous call creation/termination (Medium)
+#   - SIP: cross-customer session info disclosure (High)
+#
+# NOT eligible:
+#   - Automated scanner results without real exploit demo
+#   - AI-generated reports without manual verification
+#   - DDoS/volumetric attacks
+#   - Social engineering without technical limitation
+#   - Guessing customer-controlled credentials
+#   - Circumventing third-party services
+#   - HTML injections, clickjacking, no-referrer issues
+# ============================================================================

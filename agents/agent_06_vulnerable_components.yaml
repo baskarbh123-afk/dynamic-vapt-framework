@@ -1,0 +1,50 @@
+# ============================================================================
+# Agent 06 — Vulnerable & Outdated Components (A06:2021)
+# ============================================================================
+agent:
+  id: "agent-06-vulnerable-components"
+  name: "Vulnerable Components Agent"
+  owasp_category: "A06:2021 — Vulnerable and Outdated Components"
+  priority: "medium"
+  description: >
+    Identifies outdated, unpatched, or vulnerable third-party components in the
+    application stack. Checks for subdomain takeover via abandoned services and
+    known CVEs in detected software versions.
+
+cwe_coverage:
+  - id: "CWE-937"
+    name: "OWASP Top 10 2013: Using Components with Known Vulnerabilities"
+    test: "Match detected versions against CVE databases"
+  - id: "CWE-1035"
+    name: "OWASP Top 10 2017: Using Components with Known Vulnerabilities"
+    test: "Nuclei CVE scanning against detected components"
+  - id: "CWE-1104"
+    name: "Use of Unmaintained Third Party Components"
+    test: "Identify EOL frameworks, libraries, and services"
+
+modules:
+  - path: "phases/03-exploitation/infra/SUBDOMAIN_TAKEOVER.md"
+    priority: 1
+    description: "Dangling DNS and unclaimed service takeover"
+  - path: "phases/01-recon/ACTIVE_RECON.md"
+    priority: 2
+    description: "Technology fingerprinting and version detection"
+
+requires:
+  - "Phase 01 (Reconnaissance) completed"
+  - "targets/tech_stack.md populated"
+
+execution_order:
+  - step: 1
+    action: "Read targets/tech_stack.md for all detected versions"
+  - step: 2
+    action: "Run nuclei CVE templates against detected components"
+  - step: 3
+    action: "Execute SUBDOMAIN_TAKEOVER.md — dangling CNAME checks"
+  - step: 4
+    action: "Check JS library versions for known CVEs"
+  - step: 5
+    action: "Log all findings to logs/engagement.log"
+
+findings_prefix: "F-A06"
+report_tags: ["components", "cve", "outdated", "subdomain-takeover"]

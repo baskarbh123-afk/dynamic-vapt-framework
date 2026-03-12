@@ -1,0 +1,71 @@
+# ============================================================================
+# Agent 02 — Cryptographic Failures (A02:2021)
+# ============================================================================
+agent:
+  id: "agent-02-cryptographic"
+  name: "Cryptographic Agent"
+  owasp_category: "A02:2021 — Cryptographic Failures"
+  priority: "high"
+  description: >
+    Tests for cryptographic weaknesses including weak algorithms, improper key
+    management, insecure token handling, cleartext data transmission, and
+    inadequate encryption of sensitive data at rest and in transit.
+
+cwe_coverage:
+  - id: "CWE-261"
+    name: "Weak Encoding for Password"
+    test: "Analyze password storage and encoding mechanisms"
+  - id: "CWE-296"
+    name: "Improper Following of a Certificate's Chain of Trust"
+    test: "Validate certificate chain and token trust mechanisms"
+  - id: "CWE-310"
+    name: "Cryptographic Issues"
+    test: "Identify weak crypto algorithms in use"
+  - id: "CWE-319"
+    name: "Cleartext Transmission of Sensitive Information"
+    test: "Check for HTTP usage, unencrypted API calls, token leakage"
+  - id: "CWE-326"
+    name: "Inadequate Encryption Strength"
+    test: "Verify key lengths and algorithm strength (TLS, JWT)"
+  - id: "CWE-327"
+    name: "Use of a Broken or Risky Cryptographic Algorithm"
+    test: "Detect MD5, SHA1, DES, RC4, or ECB mode usage"
+  - id: "CWE-328"
+    name: "Use of Weak Hash"
+    test: "Check password hashing algorithms"
+  - id: "CWE-614"
+    name: "Sensitive Cookie in HTTPS Session Without Secure Attribute"
+    test: "Verify Secure flag on session cookies"
+
+modules:
+  - path: "phases/03-exploitation/auth/JWT_SECURITY.md"
+    priority: 1
+    description: "JWT algorithm flaws, secret cracking, claim tampering"
+  - path: "phases/03-exploitation/infra/SENSITIVE_DATA_EXPOSURE.md"
+    priority: 2
+    description: "Cleartext transmission, data exposure in responses"
+  - path: "phases/03-exploitation/auth/AUTHENTICATION.md"
+    priority: 3
+    description: "Password storage and encoding analysis"
+
+requires:
+  - "Phase 02 (Enumeration) completed"
+  - "docs/AUTH_FLOW.md — token types identified"
+  - "targets/tech_stack.md — crypto mechanisms noted"
+
+execution_order:
+  - step: 1
+    action: "Run SSL/TLS analysis with sslyze"
+  - step: 2
+    action: "Execute JWT_SECURITY.md — test algorithm confusion, weak secrets"
+  - step: 3
+    action: "Analyze cookie security flags (Secure, HttpOnly, SameSite)"
+  - step: 4
+    action: "Check for cleartext data transmission"
+  - step: 5
+    action: "Execute SENSITIVE_DATA_EXPOSURE.md — secrets in responses"
+  - step: 6
+    action: "Log all findings to logs/engagement.log"
+
+findings_prefix: "F-A02"
+report_tags: ["cryptography", "jwt", "tls", "encryption", "secrets"]

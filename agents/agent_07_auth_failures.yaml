@@ -1,0 +1,74 @@
+# ============================================================================
+# Agent 07 — Identification & Authentication Failures (A07:2021)
+# ============================================================================
+agent:
+  id: "agent-07-auth-failures"
+  name: "Authentication Failures Agent"
+  owasp_category: "A07:2021 — Identification and Authentication Failures"
+  priority: "critical"
+  description: >
+    Tests for authentication mechanism weaknesses including login bypass, MFA
+    bypass, session management flaws, OAuth misconfigurations, credential
+    handling issues, and session fixation/hijacking.
+
+cwe_coverage:
+  - id: "CWE-255"
+    name: "Credentials Management Errors"
+    test: "Check credential storage, handling, and lifecycle"
+  - id: "CWE-259"
+    name: "Use of Hard-coded Password"
+    test: "Search for default or hardcoded credentials"
+  - id: "CWE-287"
+    name: "Improper Authentication"
+    test: "Bypass authentication mechanisms"
+  - id: "CWE-288"
+    name: "Authentication Bypass Using an Alternate Path"
+    test: "Test for alternative authentication bypass routes"
+  - id: "CWE-290"
+    name: "Authentication Bypass by Spoofing"
+    test: "IP/header spoofing for auth bypass"
+  - id: "CWE-294"
+    name: "Authentication Bypass by Capture-replay"
+    test: "Token replay and session reuse attacks"
+  - id: "CWE-295"
+    name: "Improper Certificate Validation"
+    test: "OAuth/SAML token and certificate validation"
+  - id: "CWE-384"
+    name: "Session Fixation"
+    test: "Pre-auth session token reuse after login"
+  - id: "CWE-613"
+    name: "Insufficient Session Expiration"
+    test: "Token lifetime and session timeout testing"
+
+modules:
+  - path: "phases/03-exploitation/auth/AUTHENTICATION.md"
+    priority: 1
+    description: "Login flaws, MFA bypass, password reset"
+  - path: "phases/03-exploitation/auth/OAUTH.md"
+    priority: 1
+    description: "OAuth 2.0 / OIDC misconfigurations"
+  - path: "docs/SESSION_HANDLING.md"
+    priority: 2
+    description: "Session fixation, expiry, cookie flags"
+
+requires:
+  - "Phase 02 (Enumeration) completed"
+  - "docs/AUTH_FLOW.md — authentication flows mapped"
+  - "credentials/accounts.md — test accounts available"
+
+execution_order:
+  - step: 1
+    action: "Read docs/AUTH_FLOW.md for all login mechanisms"
+  - step: 2
+    action: "Execute AUTHENTICATION.md — login bypass, MFA, password reset"
+  - step: 3
+    action: "Execute OAUTH.md — state CSRF, redirect_uri, code reuse"
+  - step: 4
+    action: "Execute SESSION_HANDLING checks — fixation, expiry, flags"
+  - step: 5
+    action: "Test session invalidation after logout"
+  - step: 6
+    action: "Log all findings to logs/engagement.log"
+
+findings_prefix: "F-A07"
+report_tags: ["authentication", "session", "oauth", "mfa", "credentials"]

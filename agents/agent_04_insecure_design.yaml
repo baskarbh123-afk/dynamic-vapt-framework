@@ -1,0 +1,57 @@
+# ============================================================================
+# Agent 04 — Insecure Design (A04:2021)
+# ============================================================================
+agent:
+  id: "agent-04-insecure-design"
+  name: "Insecure Design Agent"
+  owasp_category: "A04:2021 — Insecure Design"
+  priority: "medium"
+  description: >
+    Tests for design-level flaws in business logic, workflow enforcement, and
+    rate limiting. Identifies architectural weaknesses that cannot be fixed by
+    implementation alone.
+
+cwe_coverage:
+  - id: "CWE-209"
+    name: "Generation of Error Message Containing Sensitive Info"
+    test: "Trigger errors to check for information leakage"
+  - id: "CWE-256"
+    name: "Plaintext Storage of a Password"
+    test: "Check if passwords are stored or transmitted in plaintext"
+  - id: "CWE-501"
+    name: "Trust Boundary Violation"
+    test: "Verify server-side enforcement of client-side controls"
+  - id: "CWE-522"
+    name: "Insufficiently Protected Credentials"
+    test: "Check credential handling in transit and at rest"
+  - id: "CWE-841"
+    name: "Improper Enforcement of Behavioral Workflow"
+    test: "Attempt to bypass multi-step workflows"
+  - id: "CWE-799"
+    name: "Improper Control of Interaction Frequency"
+    test: "Test rate limiting on sensitive endpoints"
+
+modules:
+  - path: "phases/03-exploitation/web/BUSINESS_LOGIC.md"
+    priority: 1
+    description: "Workflow bypass, price manipulation, race conditions"
+  - path: "phases/03-exploitation/web/RATE_LIMITING.md"
+    priority: 2
+    description: "Missing or bypassable rate limits"
+
+requires:
+  - "Phase 02 (Enumeration) completed"
+  - "Application workflows mapped during enumeration"
+
+execution_order:
+  - step: 1
+    action: "Map all multi-step workflows (checkout, registration, password reset)"
+  - step: 2
+    action: "Execute BUSINESS_LOGIC.md — test workflow bypass, parameter tampering"
+  - step: 3
+    action: "Execute RATE_LIMITING.md — test rate limits on login, OTP, API"
+  - step: 4
+    action: "Log all findings to logs/engagement.log"
+
+findings_prefix: "F-A04"
+report_tags: ["business-logic", "rate-limiting", "design-flaw", "workflow"]

@@ -1,0 +1,92 @@
+# ============================================================================
+# Agent 01 — Broken Access Control (A01:2021)
+# ============================================================================
+# OWASP: A01:2021 — Broken Access Control
+# Priority: CRITICAL — #1 most common web vulnerability category
+# ============================================================================
+
+agent:
+  id: "agent-01-access-control"
+  name: "Access Control Agent"
+  owasp_category: "A01:2021 — Broken Access Control"
+  priority: "critical"
+  description: >
+    Tests for broken access control vulnerabilities including IDOR, authorization
+    bypass, privilege escalation, forced browsing, and CSRF. Validates that the
+    application properly enforces access policies so users cannot act outside
+    their intended permissions.
+
+# CWE Mapping
+cwe_coverage:
+  - id: "CWE-200"
+    name: "Exposure of Sensitive Information to an Unauthorized Actor"
+    test: "Check if API responses expose data beyond the requester's authorization level"
+  - id: "CWE-284"
+    name: "Improper Access Control"
+    test: "Verify endpoint-level access control enforcement for all roles"
+  - id: "CWE-285"
+    name: "Improper Authorization"
+    test: "Test role-based access control bypass on restricted endpoints"
+  - id: "CWE-352"
+    name: "Cross-Site Request Forgery (CSRF)"
+    test: "Verify CSRF tokens on all state-changing operations"
+  - id: "CWE-639"
+    name: "Authorization Bypass Through User-Controlled Key"
+    test: "Manipulate ID parameters to access other users' resources"
+  - id: "CWE-862"
+    name: "Missing Authorization"
+    test: "Access authenticated endpoints without valid session"
+  - id: "CWE-863"
+    name: "Incorrect Authorization"
+    test: "Low-privilege user accessing high-privilege functions"
+  - id: "CWE-425"
+    name: "Direct Request (Forced Browsing)"
+    test: "Access restricted URLs directly bypassing UI controls"
+
+# Modules to execute
+modules:
+  - path: "phases/03-exploitation/auth/AUTHORIZATION.md"
+    priority: 1
+    description: "RBAC enforcement, endpoint access control"
+  - path: "phases/03-exploitation/auth/IDOR.md"
+    priority: 1
+    description: "Insecure Direct Object Reference testing"
+  - path: "phases/04-post-exploitation/PRIVILEGE_ESCALATION.md"
+    priority: 2
+    description: "Vertical and horizontal escalation assessment"
+  - path: "phases/03-exploitation/web/CSRF.md"
+    priority: 2
+    description: "Cross-Site Request Forgery validation"
+  - path: "phases/03-exploitation/infra/SENSITIVE_DATA_EXPOSURE.md"
+    priority: 3
+    description: "Unauthorized data exposure in responses"
+
+# Pre-conditions
+requires:
+  - "Phase 02 (Enumeration) completed"
+  - "credentials/accounts.md — at least 2 different role accounts"
+  - "targets/endpoints.md — endpoints documented"
+  - "docs/AUTH_FLOW.md — auth flows mapped"
+
+# Test execution order
+execution_order:
+  - step: 1
+    action: "Read credentials/accounts.md for test account roles"
+  - step: 2
+    action: "Read targets/endpoints.md for all authenticated endpoints"
+  - step: 3
+    action: "Execute AUTHORIZATION.md — test RBAC on every endpoint"
+  - step: 4
+    action: "Execute IDOR.md — manipulate IDs across user accounts"
+  - step: 5
+    action: "Execute CSRF.md — check CSRF protection on state-changing actions"
+  - step: 6
+    action: "Execute SENSITIVE_DATA_EXPOSURE.md — check response data leakage"
+  - step: 7
+    action: "Execute PRIVILEGE_ESCALATION.md — assess escalation paths"
+  - step: 8
+    action: "Log all findings to logs/engagement.log"
+
+# Output
+findings_prefix: "F-A01"
+report_tags: ["access-control", "authorization", "idor", "csrf", "privilege-escalation"]

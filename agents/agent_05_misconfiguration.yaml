@@ -1,0 +1,73 @@
+# ============================================================================
+# Agent 05 — Security Misconfiguration (A05:2021)
+# ============================================================================
+agent:
+  id: "agent-05-misconfiguration"
+  name: "Misconfiguration Agent"
+  owasp_category: "A05:2021 — Security Misconfiguration"
+  priority: "high"
+  description: >
+    Tests for security misconfigurations across the application stack including
+    missing security headers, CORS misconfiguration, clickjacking, HTTP request
+    smuggling, and web cache poisoning.
+
+cwe_coverage:
+  - id: "CWE-2"
+    name: "7PK — Environment"
+    test: "Check for debug mode, development configs in production"
+  - id: "CWE-16"
+    name: "Configuration"
+    test: "Default credentials, unnecessary features enabled"
+  - id: "CWE-388"
+    name: "7PK — Errors"
+    test: "Verbose error messages, stack traces"
+  - id: "CWE-942"
+    name: "Permissive Cross-domain Policy with Untrusted Domains"
+    test: "CORS allows arbitrary origins or credentials"
+  - id: "CWE-1021"
+    name: "Improper Restriction of Rendered UI Layers"
+    test: "Missing X-Frame-Options / frame-ancestors"
+  - id: "CWE-444"
+    name: "Inconsistent Interpretation of HTTP Requests"
+    test: "CL-TE / TE-CL request smuggling"
+  - id: "CWE-525"
+    name: "Use of Web Browser Cache Containing Sensitive Info"
+    test: "Cache-Control headers, cache poisoning"
+
+modules:
+  - path: "phases/03-exploitation/infra/SECURITY_MISCONFIG.md"
+    priority: 1
+    description: "Headers, debug endpoints, default credentials"
+  - path: "phases/03-exploitation/infra/CORS.md"
+    priority: 1
+    description: "Cross-Origin Resource Sharing misconfiguration"
+  - path: "phases/03-exploitation/infra/CLICKJACKING.md"
+    priority: 3
+    description: "Frame embedding protection"
+  - path: "phases/03-exploitation/infra/HTTP_SMUGGLING.md"
+    priority: 2
+    description: "HTTP request smuggling"
+  - path: "phases/03-exploitation/infra/CACHE_POISONING.md"
+    priority: 2
+    description: "Web cache poisoning attacks"
+
+requires:
+  - "Phase 01 (Reconnaissance) completed"
+  - "targets/tech_stack.md — web server and infrastructure identified"
+
+execution_order:
+  - step: 1
+    action: "Execute SECURITY_MISCONFIG.md — headers, debug, defaults"
+  - step: 2
+    action: "Execute CORS.md — test origin policies"
+  - step: 3
+    action: "Execute HTTP_SMUGGLING.md — CL-TE/TE-CL detection"
+  - step: 4
+    action: "Execute CACHE_POISONING.md — unkeyed header injection"
+  - step: 5
+    action: "Execute CLICKJACKING.md — frame embedding"
+  - step: 6
+    action: "Log all findings to logs/engagement.log"
+
+findings_prefix: "F-A05"
+report_tags: ["misconfiguration", "cors", "headers", "smuggling", "cache"]

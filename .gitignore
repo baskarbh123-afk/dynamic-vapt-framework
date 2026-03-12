@@ -1,0 +1,28 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Sensitive files — NEVER commit
+credentials/accounts.md
+credentials/api_keys.md
+credentials/oauth.md
+
+# App passwords and secrets
+*.env
+*.secret
+
+# Claude local settings
+.claude/
+
+# Large screenshot files (optional — remove this line if you want screenshots in repo)
+# evidence/screenshots/*.png
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs (engagement-specific)
+logs/engagement.log
+logs/agent_execution.log
+logs/agent_status.json

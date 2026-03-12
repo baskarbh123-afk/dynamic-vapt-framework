@@ -1,0 +1,52 @@
+# ============================================================================
+# Agent 10 — Server-Side Request Forgery (A10:2021)
+# ============================================================================
+agent:
+  id: "agent-10-ssrf"
+  name: "SSRF Agent"
+  owasp_category: "A10:2021 — Server-Side Request Forgery (SSRF)"
+  priority: "high"
+  description: >
+    Tests for SSRF vulnerabilities where the application can be tricked into
+    making requests to internal services, cloud metadata endpoints, or arbitrary
+    external hosts. Also covers open redirect as a potential SSRF enabler.
+
+cwe_coverage:
+  - id: "CWE-918"
+    name: "Server-Side Request Forgery (SSRF)"
+    test: "Test URL/webhook parameters for internal service access"
+  - id: "CWE-441"
+    name: "Unintended Proxy or Intermediary (Confused Deputy)"
+    test: "Application acts as proxy to internal resources"
+  - id: "CWE-601"
+    name: "URL Redirection to Untrusted Site"
+    test: "Open redirect enabling token theft or SSRF chains"
+
+modules:
+  - path: "phases/03-exploitation/web/SSRF.md"
+    priority: 1
+    description: "Internal service, cloud IMDS, blind OOB SSRF"
+  - path: "phases/03-exploitation/web/OPEN_REDIRECT.md"
+    priority: 2
+    description: "Open redirect for phishing and token theft"
+
+requires:
+  - "Phase 02 (Enumeration) completed"
+  - "targets/endpoints.md — URL/webhook parameters identified"
+
+execution_order:
+  - step: 1
+    action: "Read targets/endpoints.md for URL/webhook/callback parameters"
+  - step: 2
+    action: "Execute SSRF.md — test with collaborator/interactsh callbacks"
+  - step: 3
+    action: "Test cloud metadata access (169.254.169.254)"
+  - step: 4
+    action: "Execute OPEN_REDIRECT.md — test redirect parameter bypass"
+  - step: 5
+    action: "Assess SSRF-to-internal-access chain potential"
+  - step: 6
+    action: "Log all findings to logs/engagement.log"
+
+findings_prefix: "F-A10"
+report_tags: ["ssrf", "open-redirect", "internal-access", "cloud-metadata"]

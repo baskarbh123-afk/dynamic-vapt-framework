@@ -1,0 +1,97 @@
+# ============================================================================
+# Agent 03 — Injection (A03:2021)
+# ============================================================================
+agent:
+  id: "agent-03-injection"
+  name: "Injection Agent"
+  owasp_category: "A03:2021 — Injection"
+  priority: "critical"
+  description: >
+    Tests for all injection-class vulnerabilities including SQL injection, XSS,
+    OS command injection, template injection, XML external entity, and HTML
+    injection across all identified input vectors.
+
+cwe_coverage:
+  - id: "CWE-20"
+    name: "Improper Input Validation"
+    test: "Test input validation on all parameters"
+  - id: "CWE-74"
+    name: "Improper Neutralization of Special Elements in Output"
+    test: "Inject special characters in all input vectors"
+  - id: "CWE-77"
+    name: "Command Injection"
+    test: "Inject OS command separators in parameters"
+  - id: "CWE-78"
+    name: "Improper Neutralization of Special Elements in OS Command"
+    test: "Test for OS command execution via input"
+  - id: "CWE-79"
+    name: "Cross-site Scripting (XSS)"
+    test: "Test reflected, stored, and DOM-based XSS"
+  - id: "CWE-89"
+    name: "SQL Injection"
+    test: "Test error-based, boolean-based, and time-based SQLi"
+  - id: "CWE-94"
+    name: "Improper Control of Generation of Code"
+    test: "Test for server-side code injection"
+  - id: "CWE-116"
+    name: "Improper Encoding or Escaping of Output"
+    test: "Verify output encoding in all contexts"
+  - id: "CWE-611"
+    name: "Improper Restriction of XML External Entity Reference"
+    test: "Test for XXE in XML input endpoints"
+  - id: "CWE-917"
+    name: "Improper Neutralization of Special Elements in Expression"
+    test: "Test for server-side template injection"
+
+modules:
+  - path: "phases/03-exploitation/web/XSS.md"
+    priority: 1
+    description: "Reflected, Stored, DOM-based XSS"
+  - path: "phases/03-exploitation/web/SQL_INJECTION.md"
+    priority: 1
+    description: "SQL injection (error/boolean/time-based)"
+  - path: "phases/03-exploitation/web/COMMAND_INJECTION.md"
+    priority: 1
+    description: "OS command injection"
+  - path: "phases/03-exploitation/web/SSTI.md"
+    priority: 2
+    description: "Server-side template injection"
+  - path: "phases/03-exploitation/web/XXE.md"
+    priority: 2
+    description: "XML External Entity injection"
+  - path: "phases/03-exploitation/web/HTML_INJECTION.md"
+    priority: 3
+    description: "HTML injection and content spoofing"
+  - path: "phases/03-exploitation/web/PATH_TRAVERSAL.md"
+    priority: 2
+    description: "Directory traversal and LFI"
+
+requires:
+  - "Phase 02 (Enumeration) completed"
+  - "targets/endpoints.md — input vectors identified"
+  - "targets/tech_stack.md — backend language and DB type known"
+
+execution_order:
+  - step: 1
+    action: "Read targets/endpoints.md for all input vectors"
+  - step: 2
+    action: "Read targets/tech_stack.md for DB type and template engine"
+  - step: 3
+    action: "Execute SQL_INJECTION.md on DB-connected endpoints"
+  - step: 4
+    action: "Execute XSS.md on all reflected/stored output points"
+  - step: 5
+    action: "Execute COMMAND_INJECTION.md on OS-interacting parameters"
+  - step: 6
+    action: "Execute SSTI.md if template engine identified"
+  - step: 7
+    action: "Execute XXE.md if XML input endpoints exist"
+  - step: 8
+    action: "Execute PATH_TRAVERSAL.md on file-handling endpoints"
+  - step: 9
+    action: "Execute HTML_INJECTION.md on user-content rendering"
+  - step: 10
+    action: "Log all findings to logs/engagement.log"
+
+findings_prefix: "F-A03"
+report_tags: ["injection", "xss", "sqli", "cmdi", "ssti", "xxe", "lfi"]
