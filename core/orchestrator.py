@@ -44,6 +44,22 @@ from agents.report_agent import ReportAgent
 from agents.notification_agent import NotificationAgent
 from typing import Any, Dict, List, Optional
 
+# v2 Architecture components (imported with graceful fallback)
+try:
+    from core.authorization_guard import AuthorizationGuard
+    from core.graph_db import GraphDB, GraphSyncWorker
+    from core.attack_chain_engine import AttackChainEngine
+    from core.report_engine import ReportEngine
+    from core.rate_limiter import RateLimiter
+    from core.token_optimizer import PHASE_BUDGETS, LLMResponseCache
+    from core.evidence_store import EvidenceStore
+    from agents.recon_pipeline import ReconPipeline
+    V2_AVAILABLE = True
+except ImportError as _v2_err:
+    V2_AVAILABLE = False
+    logger_pre = logging.getLogger("orchestrator.v2")
+    logger_pre.debug(f"v2 components not fully loaded: {_v2_err}")
+
 LOG_DIR = BASE_DIR / "logs"
 ENGAGEMENT_LOG = LOG_DIR / "engagement.log"
 
@@ -143,6 +159,76 @@ class Orchestrator:
             logger.info(f"Agent initialized: {agent.name} (phase: {agent.phase})")
 
         logger.info(f"System initialized with {len(self.agents)} agents")
+
+        # Initialize v2 architecture components
+        self._init_v2_components()
+
+    def _init_v2_components(self):
+        """Initialize v2 architecture components if available."""
+        if not V2_AVAILABLE:
+            logger.debug("v2 components not available — running in v1 mode")
+            self.guard = None
+            self.graph = None
+            self.chain_engine = None
+            self.rate_limiter = None
+            self.evidence_store = None
+            self.recon_pipeline = None
+            return
+
+        try:
+            # Authorization guard (scope enforcement)
+            self.guard = AuthorizationGuard(self.config)
+            logger.info("[v2] AuthorizationGuard initialized")
+
+            # Graph database
+            self.graph = GraphDB(data_dir="data")
+            self.graph.load()
+            self._graph_sync = GraphSyncWorker(self.kb, self.graph)
+            logger.info("[v2] GraphDB initialized")
+
+            # Attack chain engine
+            self.chain_engine = AttackChainEngine()
+            logger.info("[v2] AttackChainEngine initialized (10 templates)")
+
+            # Rate limiter
+            rate_cfg = self.config.get("preferences", {}).get("rate_limiting", {})
+            self.rate_limiter = RateLimiter(
+                default_rps=float(rate_cfg.get("requests_per_second", 10))
+            )
+            logger.info("[v2] RateLimiter initialized")
+
+            # Evidence store
+            engagement_id = self.config.get("engagement", {}).get("id", "eng-001")
+            self.evidence_store = EvidenceStore(
+                base_dir="evidence",
+                tenant_id="default",
+                engagement_id=engagement_id,
+            )
+            logger.info("[v2] EvidenceStore initialized")
+
+            # Recon pipeline (stages 4-7)
+            self.recon_pipeline = ReconPipeline(
+                config=self.config,
+                tools=self.tools.available() if self.tools else {},
+                kb=self.kb,
+                guard=self.guard,
+            )
+            logger.info("[v2] ReconPipeline (stages 4-7) initialized")
+
+            # LLM cache
+            self._llm_cache = LLMResponseCache()
+            logger.info("[v2] LLM response cache initialized")
+
+            logger.info("[v2] All v2 components initialized successfully")
+
+        except Exception as e:
+            logger.warning(f"[v2] Component initialization failed: {e}. Running in v1 mode.")
+            self.guard = None
+            self.graph = None
+            self.chain_engine = None
+            self.rate_limiter = None
+            self.evidence_store = None
+            self.recon_pipeline = None
 
     # ------------------------------------------------------------------
     # Phase Execution
