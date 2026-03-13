@@ -11,19 +11,8 @@ AUTHORIZED SCOPE
 
 The following assets are fully authorized for security testing:
 
-1. shop.globalbuitenreclame.nl
-2. globalbuitenreclame.nl
-3. gopps.global.com
-4. fellasstudios.com
-5. fellastudios.com
-6. remixd.com
-7. dashboard.remixd.com
-8. [www.makesomenoise.com](http://www.makesomenoise.com)
-9. [www.victoriousfestival.co.uk](http://www.victoriousfestival.co.uk)
-10. production.victoriousfestival.co.uk
-11. [www.transfirm.nl](http://www.transfirm.nl)
-12. global.madebywiser.com
-13. 34.96.126.232:9801
+1. [target-domain.com]
+2. [*.target-domain.com] (all subdomains)
 
 Testing is allowed only for these assets.
 
@@ -62,22 +51,6 @@ Create specialized agents to test each target:
 • Reporting Agent
 
 Agents should work in parallel and share discovered endpoints.
-
----
-
-OUT OF SCOPE ISSUES
-
-Do NOT report:
-
-• informational findings
-• CORS misconfiguration
-• missing security headers
-• clickjacking
-• rate limiting issues
-• banner disclosure
-• version disclosure
-
-Ignore these findings and continue searching for higher impact vulnerabilities.
 
 ---
 

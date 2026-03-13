@@ -30,8 +30,8 @@ from PIL import Image, ImageDraw, ImageFont
 # CONFIGURATION
 # ═══════════════════════════════════════════════════════════════
 
-TESTER = "Baskar"
-ENGAGEMENT = "Multi-Target Penetration Test"
+TESTER = ""                # e.g., "John Doe"
+ENGAGEMENT = ""            # e.g., "Acme Corp Penetration Test"
 CLASSIFICATION = "CONFIDENTIAL"
 
 EVIDENCE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -275,174 +275,33 @@ def render_screenshot(
 # ═══════════════════════════════════════════════════════════════
 
 FINDINGS = {
-
-    "F-001": {
-        "title": "Swagger API Documentation Publicly Exposed",
-        "severity": "Medium",
-        "cvss": "5.3",
-        "target": "gopps.global.com",
-        "pocs": [
-            {
-                "label": "Discovery — Swagger UI Accessible",
-                "cmd": 'curl -sI "https://gopps.global.com/swagger/ui/index" | head -15',
-                "annotation": "Swagger UI is publicly accessible without authentication.\nHTTP 200 confirms full interactive API documentation is exposed.",
-            },
-            {
-                "label": "Exploitation — Full API Spec Extracted",
-                "cmd": 'curl -s "https://gopps.global.com/swagger/docs/v1" | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps({\'info\':d[\'info\'],\'host\':d[\'host\'],\'paths_count\':len(d[\'paths\']),\'definitions_count\':len(d[\'definitions\']),\'paths_sample\':list(d[\'paths\'].keys())[:12],\'securityDefinitions\':d.get(\'securityDefinitions\',{})},indent=2))"',
-                "annotation": "Full API specification extracted: 45 endpoints, 96 data models.\nIncludes auth endpoints, order management, data export, and search APIs.",
-            },
-            {
-                "label": "Impact — Sensitive Endpoint Enumeration",
-                "cmd": 'curl -s "https://gopps.global.com/swagger/docs/v1" | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\'  {m.upper():7s} {p}\') for p,v in list(d[\'paths\'].items())[:20] for m in v.keys() if m in (\'get\',\'post\',\'put\',\'delete\',\'patch\')]"',
-                "annotation": "Complete API route map with HTTP methods exposed.\nAttacker can craft targeted requests against order, property, and data endpoints.",
-            },
-        ]
-    },
-
-    "F-002": {
-        "title": "API Status Endpoint Exposes Internal Details",
-        "severity": "Medium",
-        "cvss": "5.3",
-        "target": "gopps.global.com",
-        "pocs": [
-            {
-                "label": "Discovery — Status Endpoint Accessible",
-                "cmd": 'curl -s "https://gopps.global.com/api/status" | python3 -m json.tool | head -25',
-                "annotation": "Status endpoint returns internal application details without authentication.\nExposes version, config field names, and permission model.",
-            },
-            {
-                "label": "Exploitation — Permission Model Extracted",
-                "cmd": 'curl -s "https://gopps.global.com/api/status" | python3 -c "import sys,json; d=json.load(sys.stdin); print(\'Application:\',d.get(\'applicationName\')); print(\'Version:\',d.get(\'version\')); print(\'\\nConfig fields:\'); [print(f\'  {k}: {v}\') for k,v in d.items() if \'Configuration\' in k or \'Connection\' in k]; print(\'\\nPermission model:\'); [print(f\'  {k}: {v}\') for k,v in d.get(\'userDetails\',{}).get(\'userPrivileges\',{}).items()]"',
-                "annotation": "Full authorization model extracted: 9 privilege flags revealed.\nAttacker knows exact permission escalation targets.",
-            },
-            {
-                "label": "Impact — Debug Configuration Confirmed",
-                "cmd": 'curl -s "https://gopps.global.com/api/about" | python3 -m json.tool',
-                "annotation": "/api/about confirms debug mode: local=\"true\".\nTest/debug fields present in production — indicates dev config deployed to prod.",
-            },
-        ]
-    },
-
-    "F-003": {
-        "title": "Internal Environment URLs Leaked in JS Bundle",
-        "severity": "Medium",
-        "cvss": "5.3",
-        "target": "gopps.global.com",
-        "pocs": [
-            {
-                "label": "Discovery — URLs Extracted from JS Bundle",
-                "cmd": 'curl -s "https://gopps.global.com/static/js/main.dd4b9293.js" | grep -oE \'https?://[a-zA-Z0-9._/-]+\' | sort -u',
-                "annotation": "Production JS bundle contains hardcoded internal environment URLs.\nDev, Int, Test, UAT environments and ADFS OAuth endpoint exposed.",
-            },
-            {
-                "label": "Exploitation — UAT Environment Publicly Accessible",
-                "cmd": 'curl -sI "https://goppsuat.global.com" | head -10',
-                "annotation": "UAT environment is publicly accessible from the internet (HTTP 200).\nSame application deployed with potentially weaker security controls.",
-            },
-            {
-                "label": "Impact — UAT Swagger Also Exposed",
-                "cmd": 'curl -sI "https://goppsuat.global.com/swagger/ui/index" | head -10',
-                "annotation": "UAT environment also exposes Swagger API documentation.\nAttacker has full API docs for both production AND UAT environments.",
-            },
-        ]
-    },
-
-    "F-004": {
-        "title": "WordPress REST API User Enumeration",
-        "severity": "Low",
-        "cvss": "3.7",
-        "target": "Multiple WordPress Sites",
-        "pocs": [
-            {
-                "label": "Discovery — User List via REST API (globalbuitenreclame.nl)",
-                "cmd": 'curl -s "https://globalbuitenreclame.nl/wp-json/wp/v2/users" | python3 -c "import sys,json; [print(f\'  ID:{u[\\\"id\\\"]}  Name:{u[\\\"name\\\"]}  Slug:{u[\\\"slug\\\"]}  URL:{u.get(\\\"url\\\",\\\"-\\\")}\') for u in json.load(sys.stdin)]"',
-                "annotation": "3 WordPress users enumerated including admin account.\nInternal dev URL (global-webshop.test/wp) leaked in admin profile.",
-            },
-            {
-                "label": "Exploitation — Admin Username Exposed (fellasstudios.com)",
-                "cmd": 'curl -s "https://fellasstudios.com/wp-json/wp/v2/users" | python3 -c "import sys,json; [print(f\'  ID:{u[\\\"id\\\"]}  Name:{u[\\\"name\\\"]}  Slug:{u[\\\"slug\\\"]}  Gravatar:{u[\\\"avatar_urls\\\"][\\\"96\\\"][:60]}...\') for u in json.load(sys.stdin)]"',
-                "annotation": "Admin username \"admin3456\" exposed on fellasstudios.com.\nGravatar hash can be reversed to discover admin email address.",
-            },
-            {
-                "label": "Impact — Author Enumeration (production.victoriousfestival.co.uk)",
-                "cmd": 'for i in 1 2 3 4 5 6 7 8 9 10; do loc=$(curl -sI --max-time 5 "https://production.victoriousfestival.co.uk/?author=$i" 2>&1 | grep -i "^location:" | head -1); [ -n "$loc" ] && echo "  author=$i → $loc"; done',
-                "annotation": "5 usernames discovered via ?author=N parameter enumeration.\nUsernames: rmartin, mbishop, rob-jordan, bmiles, pcaruana.",
-            },
-        ]
-    },
-
-    "F-005": {
-        "title": "XMLRPC Enabled with system.multicall",
-        "severity": "Low",
-        "cvss": "3.7",
-        "target": "production.victoriousfestival.co.uk",
-        "pocs": [
-            {
-                "label": "Discovery — XMLRPC Methods Listing",
-                "cmd": 'curl -s -X POST "https://production.victoriousfestival.co.uk/xmlrpc.php" -H "Content-Type: text/xml" -d \'<?xml version="1.0"?><methodCall><methodName>system.listMethods</methodName></methodCall>\' | grep "<string>" | head -15',
-                "annotation": "XMLRPC is enabled and responds to system.listMethods.\nsystem.multicall present — allows brute-force amplification.",
-            },
-            {
-                "label": "Exploitation — Multicall Confirmation",
-                "cmd": 'curl -s -X POST "https://production.victoriousfestival.co.uk/xmlrpc.php" -H "Content-Type: text/xml" -d \'<?xml version="1.0"?><methodCall><methodName>system.listMethods</methodName></methodCall>\' | grep -c "<string>"',
-                "annotation": "Total number of exposed XMLRPC methods.\nIncludes wp.getUsersBlogs, metaWeblog.*, blogger.* — all authentication targets.",
-            },
-            {
-                "label": "Impact — wp-cron.php Also Accessible",
-                "cmd": 'for site in "https://fellasstudios.com" "https://production.victoriousfestival.co.uk" "https://www.victoriousfestival.co.uk"; do code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$site/wp-cron.php"); echo "  $site/wp-cron.php → HTTP $code"; done',
-                "annotation": "wp-cron.php publicly accessible on 3 WordPress sites.\nCombined with XMLRPC, increases attack surface for resource exhaustion.",
-            },
-        ]
-    },
-
-    "F-006": {
-        "title": "ADFS OAuth Configuration Leaked",
-        "severity": "Medium",
-        "cvss": "5.3",
-        "target": "gopps.global.com",
-        "pocs": [
-            {
-                "label": "Discovery — Auth Redirect Exposes ADFS Config",
-                "cmd": 'curl -sI "https://gopps.global.com/api/security/authentication/login?redirectUri=https://gopps.global.com" | head -15',
-                "annotation": "Authentication redirect reveals full ADFS OAuth2 configuration.\nADFS server, client_id, resource, and redirect_uri all exposed.",
-            },
-            {
-                "label": "Exploitation — ADFS Server Identification",
-                "cmd": 'curl -sI "https://gopps.global.com/api/security/authentication/login?redirectUri=https://gopps.global.com" | grep -i location | sed "s/.*adfs/\\nADFS Server: adfs/" | tr "&" "\\n" | head -10',
-                "annotation": "Extracted: ADFS Server = adfs2.thisisglobal.com\nClient ID = gOpps.Prod | Resource = urn:gOpps.Prod",
-            },
-            {
-                "label": "Impact — Swagger Confirms Auth Architecture",
-                "cmd": 'curl -s "https://gopps.global.com/swagger/ui/index" | grep -i "apiKey\\|oauth\\|rootUrl\\|discovery" | head -10',
-                "annotation": "Swagger UI confirms: apiKeyName=Authorization, apiKeyIn=header.\nCombined with ADFS details, full auth architecture is mapped.",
-            },
-        ]
-    },
-
-    "F-007": {
-        "title": "Sanity.io CMS Project ID and Dataset Exposed",
-        "severity": "Low",
-        "cvss": "3.7",
-        "target": "www.makesomenoise.com",
-        "pocs": [
-            {
-                "label": "Discovery — Sanity Config in HTML Source",
-                "cmd": 'curl -s "https://www.makesomenoise.com" | grep -o \'lvz0au6x\\|api\\.sanity\\.io\\|"production"\' | sort -u',
-                "annotation": "Sanity.io project ID and dataset name found in client-side HTML.\nProject: lvz0au6x | Dataset: production | Host: api.sanity.io",
-            },
-            {
-                "label": "Exploitation — Sanity API Preconnect Confirmed",
-                "cmd": 'curl -s "https://www.makesomenoise.com" | grep -i "preconnect\\|sanity" | head -5',
-                "annotation": "HTML includes <link rel=preconnect> to Sanity API endpoint.\nConfirms active client-side API connection to lvz0au6x.api.sanity.io.",
-            },
-            {
-                "label": "Impact — Vercel Deployment Details Exposed",
-                "cmd": 'curl -sI "https://www.makesomenoise.com" | grep -i "x-vercel\\|x-nextjs\\|x-powered\\|x-matched"',
-                "annotation": "Additional info disclosure: Vercel deployment ID, Next.js version.\nCombined with Sanity project ID, full stack architecture is mapped.",
-            },
-        ]
-    },
+    # ═══════════════════════════════════════════════════════════════
+    # Add your findings here. Example:
+    #
+    # "F-001": {
+    #     "title": "Swagger API Documentation Publicly Exposed",
+    #     "severity": "Medium",
+    #     "cvss": "5.3",
+    #     "target": "api.example.com",
+    #     "pocs": [
+    #         {
+    #             "label": "Discovery — Swagger UI Accessible",
+    #             "cmd": 'curl -sI "https://api.example.com/swagger/ui/index" | head -15',
+    #             "annotation": "Swagger UI is publicly accessible without authentication.",
+    #         },
+    #         {
+    #             "label": "Exploitation — Full API Spec Extracted",
+    #             "cmd": 'curl -s "https://api.example.com/swagger/docs/v1" | python3 -m json.tool | head -30',
+    #             "annotation": "Full API specification extracted.",
+    #         },
+    #         {
+    #             "label": "Impact — Sensitive Endpoint Enumeration",
+    #             "cmd": 'curl -s "https://api.example.com/swagger/docs/v1" | python3 -c "import sys,json; print(len(json.load(sys.stdin).get(\'paths\',{})))"',
+    #             "annotation": "Complete API route map exposed.",
+    #         },
+    #     ]
+    # },
+    # ═══════════════════════════════════════════════════════════════
 }
 
 

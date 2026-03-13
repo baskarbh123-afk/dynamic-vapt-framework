@@ -1,5 +1,5 @@
 # Endpoint Inventory
-> Auto-generated from config.yaml on 2026-03-12 21:20:54
+> Auto-generated from config.yaml
 > Populate this file during the Enumeration phase.
 
 ---
@@ -22,8 +22,8 @@
 
 | # | Method | Endpoint | Auth | Description |
 |---|--------|----------|------|-------------|
-| 1 | GET | /api/* | bearer | Cloudonix REST API — staging |
-| 2 | POST | /api/* | bearer | Cloudonix REST API — staging |
+| 1 | GET | /api/* | bearer | REST API |
+| 2 | POST | /api/* | bearer | REST API |
 
 *(Add all discovered API endpoints during enumeration)*
 

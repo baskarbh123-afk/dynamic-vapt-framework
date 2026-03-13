@@ -1,6 +1,6 @@
 # Agent Execution Summary
-> Engagement: Cloudonix Staging Platform Penetration Test
-> Generated: 2026-03-09 16:03:03
+> Engagement: [Engagement Name]
+> Generated: [Date]
 
 ---
 

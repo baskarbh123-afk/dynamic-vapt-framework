@@ -19,8 +19,8 @@ from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 
 # ── Configuration ──────────────────────────────────────────────
-TESTER = "Baskar Mariyappan"
-ENGAGEMENT = "Geizhals.at Penetration Test"
+TESTER = ""                # e.g., "John Doe"
+ENGAGEMENT = ""            # e.g., "Acme Corp Penetration Test"
 
 EVIDENCE_DIR = os.path.dirname(os.path.abspath(__file__))
 SCREENSHOTS_DIR = os.path.join(EVIDENCE_DIR, "screenshots")
@@ -474,106 +474,33 @@ def create_browser_screenshot(finding_id, poc_num, poc_type, title, url, severit
 # ── Findings Definition ─────────────────────────────────────────
 
 FINDINGS = {
-    "F-008": {
-        "title": "WordPress REST API User Enumeration",
-        "severity": "MEDIUM",
-        "target": "blog.geizhals.at",
-        "pocs": [
-            {
-                "type": "discovery",
-                "url": "https://blog.geizhals.at/wp-json/wp/v2/users",
-                "cmd": 'curl -s "https://blog.geizhals.at/wp-json/wp/v2/users" | python3 -m json.tool',
-                "annotation": "FINDING: 10 user accounts enumerated without authentication — IDs, names, slugs, and Gravatar hashes exposed via WordPress REST API",
-            },
-            {
-                "type": "exploitation",
-                "url": "https://unternehmen.geizhals.at/wp-json/wp/v2/users",
-                "cmd": 'curl -s "https://unternehmen.geizhals.at/wp-json/wp/v2/users" | python3 -m json.tool',
-                "annotation": "FINDING: Corporate site exposes 3 users with full real names — Christian Peidelstein, Michael Kröll, romangeizhals",
-            },
-            {
-                "type": "impact",
-                "url": "https://blog.geizhals.at/wp-json/wp/v2/users?per_page=3",
-                "cmd": 'curl -s "https://blog.geizhals.at/wp-json/wp/v2/users?per_page=3"',
-                "annotation": "IMPACT: Gravatar SHA256 hashes exposed — can be reversed to recover email addresses. 13 total users enumerated across both sites.",
-            },
-        ],
-    },
-    "F-009": {
-        "title": "XMLRPC system.multicall Enabled",
-        "severity": "MEDIUM",
-        "target": "blog.geizhals.at",
-        "pocs": [
-            {
-                "type": "discovery",
-                "url": "https://blog.geizhals.at/xmlrpc.php",
-                "cmd": 'curl -s -X POST "https://blog.geizhals.at/xmlrpc.php" -H "Content-Type: text/xml" -d \'<?xml version="1.0"?><methodCall><methodName>system.listMethods</methodName></methodCall>\'',
-                "annotation": "FINDING: XMLRPC interface enabled with 80 methods exposed including system.multicall for brute-force amplification",
-            },
-            {
-                "type": "exploitation",
-                "url": "https://unternehmen.geizhals.at/xmlrpc.php",
-                "cmd": 'curl -s -X POST "https://unternehmen.geizhals.at/xmlrpc.php" -H "Content-Type: text/xml" -d \'<?xml version="1.0"?><methodCall><methodName>system.multicall</methodName><params><param><value><array><data><value><struct><member><name>methodName</name><value><string>system.listMethods</string></value></member><member><name>params</name><value><array><data></data></array></value></member></struct></value></data></array></value></param></params></methodCall>\'',
-                "annotation": "FINDING: system.multicall confirmed functional — can bundle hundreds of login attempts per request",
-            },
-            {
-                "type": "impact",
-                "url": "https://blog.geizhals.at/wp-cron.php",
-                "cmd": 'curl -sI "https://blog.geizhals.at/wp-cron.php"',
-                "annotation": "IMPACT: wp-cron.php publicly accessible (HTTP 200) — combined with XMLRPC multicall and user enumeration creates brute-force attack chain",
-            },
-        ],
-    },
-    "F-010": {
-        "title": "Jitsi Meet Configuration Exposed & Unauthenticated Room Creation",
-        "severity": "MEDIUM",
-        "target": "meet.geizhals.at",
-        "pocs": [
-            {
-                "type": "discovery",
-                "url": "https://meet.geizhals.at/config.js",
-                "cmd": 'curl -s "https://meet.geizhals.at/config.js" | head -30',
-                "annotation": "FINDING: Full Jitsi config exposed — XMPP domain, MUC domain, BOSH endpoint, token auth disabled",
-            },
-            {
-                "type": "exploitation",
-                "url": "https://meet.geizhals.at/testroom123",
-                "cmd": 'curl -sI "https://meet.geizhals.at/testroom123"',
-                "annotation": "FINDING: Any room name returns HTTP 200 — unauthenticated meeting room creation under company domain",
-            },
-            {
-                "type": "impact",
-                "url": "https://meet.geizhals.at/config.js",
-                "cmd": 'curl -s "https://meet.geizhals.at/config.js" | grep -iE "domain|bosh|websocket|muc|token|auth"',
-                "annotation": "IMPACT: Attackers can create phishing meeting links (e.g., meet.geizhals.at/board-meeting) under trusted company domain",
-            },
-        ],
-    },
-    "F-011": {
-        "title": "User-Agent Reflected in Page Body + i18n Leak + jQuery 1.12.0",
-        "severity": "MEDIUM",
-        "target": "gct.geizhals.at",
-        "pocs": [
-            {
-                "type": "discovery",
-                "url": "https://gct.geizhals.at/",
-                "cmd": "curl -s \"https://gct.geizhals.at/\" -A '<test>' | grep 'userAgent'",
-                "annotation": "FINDING: User-Agent header reflected unsanitized in DOM — <div id=\"userAgent\"><test></div>",
-            },
-            {
-                "type": "exploitation",
-                "url": "https://gct.geizhals.at/",
-                "cmd": "curl -s \"https://gct.geizhals.at/\" | grep -oE '<title>[^<]*</title>'",
-                "annotation": "FINDING: i18n template keys leaked in page title and meta tags — home.seo.title, home.seo.description rendered as raw keys",
-            },
-            {
-                "type": "impact",
-                "url": "https://gct.geizhals.at/",
-                "cmd": "curl -s \"https://gct.geizhals.at/\" | grep -oE 'jquery[^\"]*\\.js'",
-                "annotation": "IMPACT: jQuery 1.12.0 in use — vulnerable to CVE-2019-11358 (prototype pollution), CVE-2020-11022 and CVE-2020-11023 (XSS)",
-            },
-        ],
-    },
+    # Add your findings here. Example:
+    #
+    # "F-001": {
+    #     "title": "WordPress REST API User Enumeration",
+    #     "severity": "MEDIUM",
+    #     "target": "blog.example.com",
+    #     "pocs": [
+    #         {
+    #             "type": "discovery",
+    #             "url": "https://blog.example.com/wp-json/wp/v2/users",
+    #             "cmd": 'curl -s "https://blog.example.com/wp-json/wp/v2/users" | python3 -m json.tool',
+    #             "annotation": "FINDING: User accounts enumerated without authentication",
+    #         },
+    #         {
+    #             "type": "exploitation",
+    #             "url": "https://blog.example.com/wp-json/wp/v2/users",
+    #             "cmd": 'curl -s "https://blog.example.com/wp-json/wp/v2/users?per_page=100"',
+    #             "annotation": "FINDING: Full user list with names and slugs exposed",
+    #         },
+    #         {
+    #             "type": "impact",
+    #             "url": "https://blog.example.com/wp-cron.php",
+    #             "cmd": 'curl -sI "https://blog.example.com/wp-cron.php"',
+    #             "annotation": "IMPACT: wp-cron.php publicly accessible",
+    #         },
+    #     ],
+    # },
 }
 
 

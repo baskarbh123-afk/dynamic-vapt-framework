@@ -24,8 +24,9 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 
 # ── Configuration ────────────────────────────────────────────────
-FROM_EMAIL = "baskar18022001@gmail.com"
-TO_EMAIL = "bugbounty@geizhals.at"
+FROM_NAME = ""         # e.g., "John Doe"
+FROM_EMAIL = ""        # e.g., "tester@gmail.com"
+TO_EMAIL = ""          # e.g., "client@company.com"
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 465
 
@@ -36,25 +37,36 @@ SCREENSHOTS_DIR = os.path.join(EVIDENCE_DIR, "screenshots")
 
 
 def parse_email_file(filepath):
-    """Parse an email text file and extract Subject and Body."""
+    """Parse an email text file and extract Subject, Body (plain text), and optional HTML."""
     with open(filepath, "r") as f:
         content = f.read()
 
     lines = content.split("\n")
     subject = ""
     body_start = 0
+    has_html = False
 
     for i, line in enumerate(lines):
         if line.startswith("Subject:"):
             subject = line.replace("Subject:", "").strip()
-        if line.startswith("From:") or line.startswith("To:") or line.startswith("Subject:"):
+        elif line.startswith("X-HTML-Body:"):
+            has_html = True
+        elif line.startswith("From:") or line.startswith("To:"):
             continue
-        if i > 0 and not line.startswith("From:") and not line.startswith("To:") and not line.startswith("Subject:"):
+        elif i > 0 and not line.startswith("From:") and not line.startswith("To:") and not line.startswith("Subject:") and not line.startswith("X-HTML-Body:"):
             body_start = i
             break
 
     body = "\n".join(lines[body_start:])
-    return subject, body.strip()
+
+    # Load HTML version if it exists
+    html_path = filepath.replace("_email.txt", "_email.html")
+    html_body = None
+    if has_html and os.path.exists(html_path):
+        with open(html_path, "r") as f:
+            html_body = f.read()
+
+    return subject, body.strip(), html_body
 
 
 def markdown_to_html(md_text):
@@ -193,21 +205,29 @@ def find_screenshots(finding_id):
     return screenshots
 
 
-def send_email(subject, body, screenshots, app_password, dry_run=False):
-    """Send a single email with HTML body and optional screenshot attachments."""
+def send_email(subject, body, html_body, screenshots, app_password, dry_run=False):
+    """Send a single email with HTML body and optional screenshot attachments.
+
+    Uses multipart/mixed -> multipart/alternative (text + html) + image attachments,
+    matching the original AdPower email MIME structure.
+    """
     msg = MIMEMultipart("mixed")
-    msg["From"] = FROM_EMAIL
+    msg["From"] = f"{FROM_NAME} <{FROM_EMAIL}>"
     msg["To"] = TO_EMAIL
     msg["Subject"] = subject
 
-    # Convert markdown to HTML and attach both versions
-    html_body = markdown_to_html(body)
+    # Build multipart/alternative with plain text + HTML
     alt_part = MIMEMultipart("alternative")
     alt_part.attach(MIMEText(body, "plain", "utf-8"))
-    alt_part.attach(MIMEText(html_body, "html", "utf-8"))
+
+    # Use pre-built HTML if available, otherwise convert markdown
+    if html_body:
+        alt_part.attach(MIMEText(html_body, "html", "utf-8"))
+    else:
+        alt_part.attach(MIMEText(markdown_to_html(body), "html", "utf-8"))
     msg.attach(alt_part)
 
-    # Attach screenshots
+    # Attach screenshots as image/png
     for screenshot_path in screenshots:
         filename = os.path.basename(screenshot_path)
         with open(screenshot_path, "rb") as img_file:
@@ -218,6 +238,8 @@ def send_email(subject, body, screenshots, app_password, dry_run=False):
     if dry_run:
         attach_names = [os.path.basename(s) for s in screenshots]
         print(f"  [DRY RUN] Would send: {subject}")
+        print(f"            From: {FROM_NAME} <{FROM_EMAIL}>")
+        print(f"            HTML: {'pre-built' if html_body else 'auto-converted'}")
         print(f"            Attachments: {attach_names if attach_names else 'None'}")
         return True
 
@@ -260,10 +282,10 @@ def main():
 
     print(f"\n{'='*60}")
     print(f"  PT Finding Email Sender")
-    print(f"  From: {FROM_EMAIL}")
+    print(f"  From: {FROM_NAME} <{FROM_EMAIL}>")
     print(f"  To:   {TO_EMAIL}")
     print(f"  Findings: {len(email_files)}")
-    print(f"  Format: HTML (markdown rendered)")
+    print(f"  Format: multipart/mixed (text + HTML + screenshots)")
     print(f"{'='*60}\n")
 
     # Get password
@@ -286,11 +308,12 @@ def main():
 
         print(f"[{finding_id}] Processing...")
 
-        subject, body = parse_email_file(email_file)
+        subject, body, html_body = parse_email_file(email_file)
         screenshots = find_screenshots(finding_id)
 
         print(f"  To:      {TO_EMAIL}")
         print(f"  Subject: {subject}")
+        print(f"  HTML:    {'yes' if html_body else 'auto-convert'}")
         print(f"  Screenshots: {len(screenshots)} attached")
 
         # Ask for permission before each email
@@ -304,7 +327,7 @@ def main():
                 skipped += 1
                 continue
 
-        success = send_email(subject, body, screenshots, app_password, dry_run=args.dry_run)
+        success = send_email(subject, body, html_body, screenshots, app_password, dry_run=args.dry_run)
 
         if success:
             print(f"  -> Sent successfully!" if not args.dry_run else "")

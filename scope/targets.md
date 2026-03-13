@@ -11,10 +11,10 @@ AUTHORIZED SCOPE
 
 The following assets are fully authorized for security testing:
 
-1. geizhals.at
-2. *.geizhals.at (all subdomains)
+1. [target-domain.com]
+2. [*.target-domain.com] (all subdomains)
 
-Testing is allowed only for these assets and any subdomains discovered under geizhals.at.
+Testing is allowed only for these assets and any subdomains discovered under the primary domain.
 
 ---
 
@@ -35,26 +35,11 @@ You are authorized to perform:
 • directory and endpoint discovery
 
 Testing may include automated tools and manual validation techniques.
+Testing is unauthenticated only — no credentials provided.
 
 ---
 
-OUT OF SCOPE ISSUES
-
-Do NOT report:
-
-• informational findings
-• CORS misconfiguration
-• missing security headers
-• clickjacking
-• rate limiting issues
-• banner disclosure
-• version disclosure
-
-Ignore these findings and continue searching for higher impact vulnerabilities.
-
----
-
-TESTING SAFETY RULES
+OUT OF SCOPE
 
 Do NOT perform:
 
@@ -63,6 +48,7 @@ Do NOT perform:
 • service disruption
 • brute force attacks
 • attacks outside the defined scope
+• social engineering
 
 All testing must be safe and non-destructive.
 

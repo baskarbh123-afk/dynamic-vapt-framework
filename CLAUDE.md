@@ -14,7 +14,27 @@ All content is documentation and testing methodology — the framework provides 
 
 Python 3 with `pyyaml` (`pip3 install pyyaml`). No other external dependencies for the framework scripts.
 
-## Quick Start
+## Quick Start (AI Orchestrator — New Architecture)
+
+```bash
+# 1. Fill config.yaml with engagement parameters
+# 2. Dry-run to preview all planned actions
+python3 run.py --dry-run
+
+# 3. Run all phases (recon → enumeration → vulnerability → exploit → attack_chain → report → notification)
+python3 run.py
+
+# 4. Run specific phases
+python3 run.py --phase recon,enumeration
+
+# 5. Check available tools
+python3 run.py --tools
+
+# 6. View knowledge base summary
+python3 run.py --summary
+```
+
+## Quick Start (Legacy Setup)
 
 ```bash
 # 1. Fill config.yaml with engagement parameters
@@ -28,6 +48,115 @@ python3 setup.py
 python3 setup.py --status
 
 # 5. Initialize Claude session with prompts/START_PT_SESSION.md
+```
+
+---
+
+## AI Orchestrator Architecture (New)
+
+The framework uses a multi-agent AI orchestrator (`core/orchestrator.py`) with 8 specialized agents:
+
+```
+1. LOAD CONFIGURATION
+   └─ Read config.yaml (or engagement.yaml)
+      ├─ target, scope, credentials
+      ├─ testing mode, tool settings
+      └─ gmail notification settings
+
+2. INITIALIZE SYSTEM
+   ├─ Start AI Orchestrator (core/orchestrator.py)
+   ├─ Initialize Knowledge Base (core/knowledge_base.py → data/*.json)
+   ├─ Initialize Agents
+   │    ├─ ReconAgent (agents/recon_agent.py)
+   │    ├─ EnumerationAgent (agents/enumeration_agent.py)
+   │    ├─ VulnerabilityAgent (agents/vulnerability_agent.py)
+   │    ├─ PoCAgent (agents/poc_agent.py)           ← NEW
+   │    ├─ ExploitAgent (agents/exploit_agent.py)
+   │    ├─ AttackChainAgent (agents/attack_chain_agent.py)
+   │    ├─ ReportAgent (agents/report_agent.py)
+   │    └─ NotificationAgent (agents/notification_agent.py)
+   └─ Initialize Tool Integrations (core/tool_integrations.py)
+
+3. RECON → assets database
+4. ENUMERATION → endpoints database
+5. VULNERABILITY DISCOVERY → vulnerabilities database
+6. POC VALIDATION → poc_results + evidence (screenshots, HTTP logs, payloads)
+7. EXPLOITATION → evidence repository (deeper exploitation of verified PoCs)
+8. ATTACK CHAIN ANALYSIS → attack_paths database
+9. REPORT GENERATION → reports/
+10. EMAIL NOTIFICATION → Gmail SMTP
+11. LOGGING → logs/
+```
+
+### Core Modules
+
+| Module | File | Purpose |
+|--------|------|---------|
+| Orchestrator | `core/orchestrator.py` | Central coordinator — phase sequencing, agent lifecycle |
+| Knowledge Base | `core/knowledge_base.py` | JSON databases: assets, endpoints, vulnerabilities, evidence, poc_results, attack_paths |
+| Tool Integrations | `core/tool_integrations.py` | Safe wrappers for curl, nuclei, ffuf, sqlmap, subfinder, etc. |
+| Base Agent | `agents/base_agent.py` | Abstract base class with plan/execute/report lifecycle |
+
+### Agent Pipeline
+
+| Agent | Phase | Input | Output |
+|-------|-------|-------|--------|
+| ReconAgent | recon | config targets | assets DB (subdomains, DNS, tech, SSL) |
+| EnumerationAgent | enumeration | assets DB + config | endpoints DB (URLs, APIs, auth) |
+| VulnerabilityAgent | vulnerability | endpoints DB + modules | vulnerabilities DB (findings as DRAFT) |
+| **PoCAgent** | **poc_validation** | **vulnerabilities DB (DRAFT)** | **poc_results DB + evidence (screenshots, HTTP logs, payloads)** |
+| ExploitAgent | exploit | vulnerabilities DB (POC_VERIFIED) | evidence DB (deeper exploitation) |
+| AttackChainAgent | attack_chain | vulnerabilities DB | attack_paths DB (chains) |
+| ReportAgent | report | all DBs | reports/ (findings with PoC details, summary, technical) |
+| NotificationAgent | notification | vulnerabilities DB | emails via Gmail SMTP |
+
+### PoC Agent — Execution Modes
+
+The PoC Agent (`agents/poc_agent.py`) supports two execution environments:
+
+**Terminal Mode** (curl-based HTTP replay):
+- Used for: IDOR, BOLA, SQLi, SSRF, CORS, Mass Assignment, Auth Bypass, Command Injection, XXE, Path Traversal
+- Process: Replay vulnerable request → modify with exploit payload → capture request + response → validate N times
+
+**Browser Mode** (Playwright automation):
+- Used for: XSS, DOM-based XSS, Open Redirect, CSRF, Clickjacking, Auth flows, Session exploitation
+- Process: Open page → inject payload → trigger exploit → capture screenshot + HAR network logs → detect alert dialogs
+- Requires: `pip3 install playwright && python3 -m playwright install chromium`
+- Falls back to terminal mode if Playwright is not installed
+
+**Validation**: Each PoC is repeated 3 times. If 2/3 succeed, the finding is marked `POC_VERIFIED`.
+
+**Evidence storage:**
+```
+evidence/
+├── screenshots/       — Playwright screenshots (PNG)
+├── http_logs/         — HTTP request/response captures (per attempt)
+└── payload_results/   — Structured JSON validation results
+```
+
+### Knowledge Base (data/)
+
+| Database | File | Contents |
+|----------|------|----------|
+| assets | `data/assets.json` | Subdomains, DNS records, technologies, SSL info |
+| endpoints | `data/endpoints.json` | URLs, API routes, auth mechanisms, parameters |
+| vulnerabilities | `data/vulnerabilities.json` | Findings with severity, CVSS, steps, status |
+| poc_results | `data/poc_results.json` | PoC validation results, payloads, success rates |
+| evidence | `data/evidence.json` | Screenshot refs, HTTP logs, HAR logs, payload results |
+| attack_paths | `data/attack_paths.json` | Vulnerability chains, escalation paths |
+
+### Orchestrator CLI
+
+```bash
+python3 run.py                              # Run all phases
+python3 run.py --phase recon                # Run single phase
+python3 run.py --phase recon,enumeration    # Run multiple phases
+python3 run.py --dry-run                    # Plan only, don't execute
+python3 run.py --tools                      # List available security tools
+python3 run.py --status                     # Show system status
+python3 run.py --summary                    # Show knowledge base summary
+python3 run.py --config engagement.yaml     # Use specific config file
+python3 run.py --log-level DEBUG            # Set log verbosity
 ```
 
 ---

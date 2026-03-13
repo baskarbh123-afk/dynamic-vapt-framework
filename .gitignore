@@ -14,8 +14,18 @@ credentials/oauth.md
 # Claude local settings
 .claude/
 
-# Large screenshot files (optional — remove this line if you want screenshots in repo)
-# evidence/screenshots/*.png
+# Evidence files — engagement-specific, regenerated per engagement
+evidence/screenshots/*.png
+evidence/http_logs/*.txt
+evidence/http-logs/*.jsonl
+evidence/payload_results/*.json
+
+# Generated reports — engagement-specific
+reports/findings/**/*.md
+reports/findings/*.md
+!reports/findings/.gitkeep
+reports/emails/F-*_email.*
+reports/*.html
 
 # Python
 __pycache__/

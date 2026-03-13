@@ -42,7 +42,7 @@ Everything is controlled through a conversation with Claude Code. You don't need
 Open your terminal and navigate to the framework folder:
 
 ```
-cd ~/Desktop/dynamic-vapt-md\ 2
+cd /path/to/dynamic-vapt-framework
 ```
 
 Then start Claude Code:
@@ -80,7 +80,7 @@ It shows you the current targets from `scope/targets.md`. You can:
 ```
 You: change the target
 Claude: What are the new targets?
-You: geizhals.at and its all subdomains
+You: example.com and its all subdomains
 Claude: ✓ Scope updated. Moving to Step 2.
 ```
 
@@ -116,7 +116,7 @@ Provide:
 **Example:**
 
 ```
-Claude: From: baskar18022001@gmail.com, To: baskarmi510@gmail.com — confirm?
+Claude: From: tester@gmail.com, To: client@company.com — confirm?
 You: change the to mail bugbounty@example.com
 Claude: ✓ Updated. Moving to Step 4.
 ```
@@ -360,4 +360,4 @@ Everything from the previous engagement stays in the `reports/findings/` folder.
 
 ---
 
-*Framework built by Baskar Mariyappan | PTES Methodology | OWASP Top 10 2021*
+*Dynamic VAPT Framework | PTES Methodology | OWASP Top 10 2021*
